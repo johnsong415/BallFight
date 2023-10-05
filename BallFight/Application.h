@@ -10,7 +10,8 @@ public:
     ~Application();
 
 public:
-    void Initialize(HWND hWnd);
+    void Initialize(HWND hWnd, const std::string& ipAddress);
+    void Shutdown();
 
     void Update();
     void ProcessCommands();
@@ -19,8 +20,10 @@ public:
 
     void StartServer();
     void StartClient();
-    static void OnServerStarted(ErrorCode errorCodeServer);
-    static void OnClientStarted(ErrorCode errorCodeServer);
+    static void OnServerStarted(ErrorCode errorCode);
+    static void OnClientStarted(ErrorCode errorCode);
+
+    bool IsRunning() const;
 
 public:
     void OnKeyDown(WPARAM wParam);
@@ -32,8 +35,8 @@ private:
     
     DWORD m_lastTickCount = 0;
 
-    bool m_started = false;
+    bool m_clientStarted = false;
+    bool m_serverStarted = false;
 
-    bool m_client = false;
-    bool m_server = false;
+    bool m_isRunning = false;
 };

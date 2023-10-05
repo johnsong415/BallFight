@@ -1,7 +1,5 @@
 #include "Networking.h"
-//#include "PacketBuffer.h"
 
-#include <thread>
 
 Networking g_networking;
 
@@ -24,12 +22,11 @@ Networking& Networking::Get()
     return g_networking;
 }
 
-void Networking::Initialize()
+void Networking::Initialize(const std::string& ipAddress)
 {
+    g_networking.m_ipAddress = ipAddress;
     m_pThread = new std::thread(
         []() { Networking::Get().ThreadMain(); });
-
-    //networkingThread.join();
 }
 
 void Networking::StartServer()
@@ -282,7 +279,7 @@ bool Networking::StartUpServerSocket(Socket& serverSocket)
 
 bool Networking::StartUpClientSocket(Socket& clientSocket)
 {
-    clientSocket.Connect(IP_ADDRESS, LISTENING_PORT);
+    clientSocket.Connect(m_ipAddress.c_str(), LISTENING_PORT);
     int error = WSAGetLastError();
 
     return true;

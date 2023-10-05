@@ -106,6 +106,7 @@ bool Player::IsValid()
 void Player::Die()
 {
     m_alive = false;
+    SetDestination(m_coordinates);
 }
 
 void Player::UpdatePlayer(int ms)

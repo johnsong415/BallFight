@@ -15,12 +15,13 @@ Application::Application()
 Application::~Application()
 {}
 
-void Application::Initialize(HWND hWnd)
+void Application::Initialize(HWND hWnd, const std::string& ipAddress)
 {
-    Networking::Get().Initialize();
+    Networking::Get().Initialize(ipAddress);
     Graphics::Initialize(hWnd);
 
-    m_lastTickCount = GetTickCount();;
+    m_lastTickCount = GetTickCount();
+    m_isRunning = true;
 }
 
 void Application::Update()
@@ -30,8 +31,8 @@ void Application::Update()
     if (currentTickCount == m_lastTickCount) return;
 
     ProcessCommands();
-    if (m_server) Server::Get().Update(currentTickCount - m_lastTickCount);
-    if (m_client) Client::Get().Update(currentTickCount - m_lastTickCount);
+    if (m_serverStarted) Server::Get().Update(currentTickCount - m_lastTickCount);
+    if (m_clientStarted) Client::Get().Update(currentTickCount - m_lastTickCount);
     m_lastTickCount = currentTickCount;
     SceneManager::Get().Update();
 }
@@ -67,8 +68,8 @@ Application& Application::Get()
 
 void Application::StartServer()
 {
-    if (m_started) return;
-    m_server = true;
+    if (m_serverStarted || m_clientStarted) return;
+    m_serverStarted = true;
     InternalMessage* startServer = new InternalMessage;
     startServer->command = START_SERVER;
     startServer->callback = OnServerStarted;
@@ -78,9 +79,8 @@ void Application::StartServer()
 
 void Application::StartClient()
 {
-    if (m_started) return;
-    m_started = true;
-    m_client = true;
+    if (m_clientStarted) return;
+    m_clientStarted = true;
 
     SceneManager::Get().SwitchScene(SceneManager::SceneType::INGAME);
 
@@ -91,28 +91,33 @@ void Application::StartClient()
     Networking::Get().PostToComms(startClient);
 }
 
-void Application::OnServerStarted(ErrorCode errorCodeServer)
+void Application::OnServerStarted(ErrorCode errorCode)
 {
-    // TODO: notify?
+    if (errorCode != 0) {
+        g_application.m_serverStarted = false;
+        MessageBox(NULL, L"Server start failed. Please try again.", L"Server not started", MB_OK);
+        return;
+    }
 
     g_application.StartClient();
 }
 
-void Application::OnClientStarted(ErrorCode errorCodeClient)
+void Application::OnClientStarted(ErrorCode errorCode)
 {
-    // TODO: notify?
+    if (errorCode != 0) {
+        g_application.m_clientStarted = false;
+        MessageBox(NULL, L"Client start failed. Please try again.", L"Client not started", MB_OK);
+    }
 }
 
 void Application::OnKeyDown(WPARAM wParam)
 {
     return;
-    //Client::Get().OnKeyDown(wParam);
 }
 
 void Application::OnKeyUp(WPARAM wParam)
 {
     return;
-    //Client::Get().OnKeyUp(wParam);
 }
 
 void Application::OnLButtonDown(LPARAM lParam)
@@ -124,3 +129,14 @@ void Application::OnRButtonDown(LPARAM lParam)
 {
     Client::Get().OnRButtonDown(lParam);
 }
+
+void Application::Shutdown()
+{
+    m_isRunning = false;
+}
+
+bool Application::IsRunning() const
+{
+    return m_isRunning;
+}
+

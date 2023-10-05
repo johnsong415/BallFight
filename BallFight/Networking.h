@@ -1,18 +1,13 @@
 #pragma once
 
 #include "CommonTypes.h"
-
 #include "Socket.h"
-
 #include "CommunicationQueue.h"
-
 #include "Messages.h"
 
 #include <unordered_map>
+#include <thread>
 
-
-// TODO: Get from command line
-#define IP_ADDRESS          "127.0.0.1"
 #define LISTENING_PORT      1945
 
 
@@ -26,7 +21,7 @@ public:
     static Networking& Get();
 
 public:
-    void Initialize();
+    void Initialize(const std::string& ipAddress);
     void Shutdown(); // make m_shutdown false here
 
     void StartServer();
@@ -93,7 +88,7 @@ private:
     fd_set m_listeningSocketSet;
     fd_set m_clientSocketFdSet;
 
-    
+    std::string m_ipAddress;
 
     timeval m_timeToWait;
 

@@ -89,8 +89,8 @@ void ServerWorld::UpdateBall(Object* ballObject, int ms, std::unordered_set<Obje
 
     std::unordered_set<ObjectId> targets;
 
-    // target monsters and other player
     if (shotByPlayer) {
+        // target monsters and other player
         for (auto id : m_playerIds) {
             if (id != ball->GetShooter()) {
                 targets.insert(id);
@@ -100,8 +100,8 @@ void ServerWorld::UpdateBall(Object* ballObject, int ms, std::unordered_set<Obje
             targets.insert(id);
         }
     }
-    // target players only
     else {
+        // target players only
         for (auto id : m_playerIds) {
             targets.insert(id);
         }
@@ -126,15 +126,14 @@ void ServerWorld::UpdateBall(Object* ballObject, int ms, std::unordered_set<Obje
                 Networking::Get().PostToComms(killMonster);
             }
             else if (type == Object::ObjectType::PLAYER) {
-                // TODO: if monster collides with player, player dies
                 Player* player = static_cast<Player*>(target);
                 player->Die();
                 GameOver* rpcMsg = new GameOver;
                 rpcMsg->loser = player->GetId();
                 rpcMsg->ball = ball->GetId();
 
-                ServerMessage* addedPlayer = new ServerMessage(rpcMsg);
-                Networking::Get().PostToComms(addedPlayer);
+                ServerMessage* gameOver = new ServerMessage(rpcMsg);
+                Networking::Get().PostToComms(gameOver);
             }
         }
     }
@@ -379,8 +378,9 @@ void ClientWorld::KillPlayer(ObjectId playerId, ObjectId ballId)
 {
     Player* player = static_cast<Player*>(GetObject(playerId));
     if (!player) return;
+    player->Die();
     player->SetColor(COLOR_DEAD_OBJECT);
-    
+
     Object* object = GetObject(ballId);
     if (!object) return;
     if (object->GetType() == Object::ObjectType::BALL) {

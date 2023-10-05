@@ -24,15 +24,11 @@ HWND                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 
-int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
-                     _In_opt_ HINSTANCE hPrevInstance,
-                     _In_ LPWSTR    lpCmdLine,
+int APIENTRY WinMain(_In_ HINSTANCE hInstance,
+                     _In_opt_ HINSTANCE,
+                     _In_ LPSTR    lpCmdLine,
                      _In_ int       nCmdShow)
 {
-    UNREFERENCED_PARAMETER(hPrevInstance);
-    UNREFERENCED_PARAMETER(lpCmdLine);
-
-    
     // Initialize global strings
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
     LoadStringW(hInstance, IDC_BALLFIGHT, szWindowClass, MAX_LOADSTRING);
@@ -47,11 +43,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_BALLFIGHT));
 
-    Application::Get().Initialize(hWnd);
+    Application::Get().Initialize(hWnd, lpCmdLine);
 
     MSG msg;
 	// Main message loop:
-    while (true)
+    while (Application::Get().IsRunning())
     {
         BOOL available = PeekMessage(&msg, hWnd, 0, 0, PM_REMOVE);
         if (available) {
@@ -150,6 +146,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 break;
             case IDM_EXIT:
                 DestroyWindow(hWnd);
+                Application::Get().Shutdown();
                 break;
 			
 			// Start Server/Client
@@ -190,12 +187,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             EndPaint(hWnd, &ps);
         }
         break;
+
     case WM_DESTROY:
         PostQuitMessage(0);
+        Application::Get().Shutdown();
         break;
+
     default:
         return DefWindowProc(hWnd, message, wParam, lParam);
     }
+
     return 0;
 }
 
